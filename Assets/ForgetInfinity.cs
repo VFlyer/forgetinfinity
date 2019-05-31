@@ -20,6 +20,6 @@ public class ForgetInfinity : MonoBehaviour {
 
 	void Submit() {
 		Module.HandlePass ();
-		Screen.text = "SOLVED!";
+		Screen.text = "XXXXX";
 	}
 }
