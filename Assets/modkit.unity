@@ -155,12 +155,6 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8814ea52310d2614a9feda02ec355ae4, type: 2}
   m_IsPrefabParent: 0
---- !u!114 &420832763 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114400518828328598, guid: f3b2b65dc5afd414eb91a18dfde5a0ad,
-    type: 2}
-  m_PrefabInternal: {fileID: 1868099514}
-  m_Script: {fileID: 1702003387, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
 --- !u!1 &883487329
 GameObject:
   m_ObjectHideFlags: 0
@@ -346,11 +340,6 @@ Prefab:
       propertyPath: m_RootOrder
       value: 3
       objectReference: {fileID: 0}
-    - target: {fileID: 114822710477493832, guid: f3b2b65dc5afd414eb91a18dfde5a0ad,
-        type: 2}
-      propertyPath: ResetButton
-      value: 
-      objectReference: {fileID: 420832763}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f3b2b65dc5afd414eb91a18dfde5a0ad, type: 2}
   m_IsPrefabParent: 0
