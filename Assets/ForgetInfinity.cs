@@ -27,6 +27,8 @@ public class ForgetInfinity : MonoBehaviour {
 	private int solveStagePtr = 0;
 	private bool firstSolve = true;
 
+    private bool solveMode = false;
+
 	private int lastThing = 0;
 
 	// Use this for initialization
@@ -132,33 +134,64 @@ public class ForgetInfinity : MonoBehaviour {
 		lastThing = list1.Count();
 	}
 
-	void Submit() {
+    static int ConvertFromBase5(string number)
+    {
+        return number.Select(digit => (int)digit - 48).Aggregate(0, (x, y) => x * 5 + y);
+    }
+
+    void Submit() {
 		SubmitButton.AddInteractionPunch();
         if (!bossMode) {
 			Debug.Log("[Forget Infinity] boss mode not active. Strike! (submit button)");
 			Module.HandleStrike();
 			return;
 		}
+        if (solveMode)
+        {
+            Debug.Log("[Forget Infinity] Solve mode detected! not submitting!");
+            solveMode = false;
+            StringBuilder sb = new StringBuilder(); // base 5
+            for (int i=0; i<5; i++)
+            {
+                var j = code[i];
+                if (j > 0)
+                {
+                    j--;
+                }
+                sb.Append(j.ToString());
+            }
+            var dec = ConvertFromBase5(sb.ToString());
+            Debug.Log("[Forget Infinity] input is " + sb.ToString() + ", in base 10 that's " + dec);
+            if (stages.Count() > dec && dec >= 0)
+            {
+                updateScreen(stages[dec].ToArray());
+            }
+            Module.HandleStrike();
+            Screen.color = new UnityEngine.Color(1, 1, 1);
+            return;
+        }
 		var stg = stages[solveStagePtr];
+        var asenum = stg.AsEnumerable();
         Debug.Log("not calculated: " + ListString(stg));
         if (KMBombInfoExtensions.KMBI.IsPortPresent(Info, KMBombInfoExtensions.KMBI.KnownPortType.StereoRCA))
         {
             Debug.Log("rev");
-            stg.Reverse();
+            asenum = asenum.Reverse();
         }
+        var ae2 = asenum.ToList();
         var batteries = KMBombInfoExtensions.KMBI.GetBatteryCount(Info);
         if (batteries != 0)
         {
             Debug.Log("batteries " + batteries);
             for (int i=0; i<5; i++)
             {
-                var t = stg[i];
+                var t = ae2[i];
                 t = (t + batteries) % 5;
                 if (t == 0)
                 {
                     t = 5;
                 }
-                stg[i] = t;
+                ae2[i] = t;
             }
         }
         var serial = KMBombInfoExtensions.KMBI.GetSerialNumber(Info);
@@ -167,7 +200,7 @@ public class ForgetInfinity : MonoBehaviour {
             Debug.Log("FI");
             for (int i=0; i<5; i++)
             {
-                var t = stg[i];
+                var t = ae2[i];
                 t = t - 1;
                 if (t == 0)
                 {
@@ -176,14 +209,14 @@ public class ForgetInfinity : MonoBehaviour {
                 stg[i] = t;
             }
         }
-		Debug.Log("calculated: " + ListString(stg));
+		Debug.Log("calculated: " + ListString(ae2));
 		Debug.Log("solve stage ptr = " + solveStagePtr.ToString());
 		Debug.Log("stage count = " + stages.Count());
 		for (int i = 0; i < 5; i++) {
 			if (code [i] != stg[i]) {
-				Debug.Log("[Forget Infinity] Code is different from the expected input of " + ListString(stg) + ". Strike!");
+				Debug.Log("[Forget Infinity] Code is different from the expected input of " + ListString(ae2) + ". Strike!");
 				Module.HandleStrike();
-				Reset();
+				Reset(true);
                 solveStagePtr = 0;
 				return;
 			}
@@ -255,7 +288,7 @@ public class ForgetInfinity : MonoBehaviour {
 		Number(5);
 	}
 
-	void Reset() {
+	void Reset(bool fromSubmit) {
 		if (solved)
 			return;
 		if (!bossMode) {
@@ -263,21 +296,51 @@ public class ForgetInfinity : MonoBehaviour {
 			Module.HandleStrike();
 			return;
 		}
+        if (solveMode && !fromSubmit)
+        {
+            Debug.Log("[Forget Infinity] reset pushed in solve mode, adding 0 to code");
+            if (this.codeIndex == this.code.Length)
+                return;
+            if (this.codeIndex < 5)
+            {
+                this.code[this.codeIndex++] = 0;
+            }
+            updateScreen();
+            return;
+        }
+        int codeDigits = 0;
+        for (int i=0; i<5; i++)
+        {
+            if (code[i] == 0) codeDigits++;
+        }
+        if (codeDigits == 5 && !fromSubmit)
+        {
+            Debug.Log("[Forget Infinity] going into solve mode");
+            solveMode = true;
+            Screen.color = new UnityEngine.Color(0, 255, 0);
+            return;
+        }
+        
 		for (int i=0; i<5; i++) this.code[i] = 0;
 		this.codeIndex = 0;
 		updateScreen();
 	}
 
+    void Reset()
+    {
+        Reset(false);
+    }
+
     // Twitch Plays support
 
-    string TwitchHelpMessage = "Enter the sequence with \"!{0} press 12345...\". Submit with \"!{0} submit\". Reset with \"!{0} reset\".";
+    string TwitchHelpMessage = "Enter the sequence with \"!{0} press 1 2 3 4 5...\". Submit with \"!{0} submit\". Reset with \"!{0} reset\".";
 
     public KMSelectable[] ProcessTwitchCommand(string cmd)
     {
         if (solved)
             throw new System.FormatException("DansGame We're done!");
-        /*if (!bossMode)
-            throw new System.FormatException("A bit early, don't you think?");*/
+        if (!bossMode)
+            throw new System.FormatException("A bit early, don't you think?");
         cmd = cmd.ToLowerInvariant();
         List<KMSelectable> l = new List<KMSelectable>();
         if (cmd.StartsWith("press "))
@@ -298,6 +361,11 @@ public class ForgetInfinity : MonoBehaviour {
                 }
                 l.Add(Buttons[a-1]);
             }
+            if (l.Count() == 5)
+            {
+                l.Add(SubmitButton);
+            }
+            return l.ToArray();
         }
         else if (cmd.StartsWith("submit"))
         {
@@ -311,6 +379,5 @@ public class ForgetInfinity : MonoBehaviour {
         {
             throw new System.FormatException("Use 'press' followed by some numbers, 'submit' or 'reset'.");
         }
-        return l.ToArray();
     }
 }
