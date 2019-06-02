@@ -35,10 +35,9 @@ public class ForgetInfinity : MonoBehaviour {
 			ignoredModules = GetComponent<KMBossModule>().GetIgnoredModules("Forget Infinity", new string[]{
 				"Forget Me Not",     //Mandatory to prevent unsolvable bombs.
 				"Forget Everything", //Cruel FMN.
-				"Turn The Key",      //TTK is timer based, and stalls the bomb if only it and FMN are left.
+				"Turn The Key",      //TTK is timer based, and stalls the bomb if only it and FI are left.
 				"Souvenir",          //Similar situation to TTK, stalls the bomb.
 				"The Time Keeper",   //Again, timilar to TTK.
-				"Alchemy",
 				"Forget This",
 				"Simon's Stages",
 				"Timing is Everything",
@@ -47,16 +46,16 @@ public class ForgetInfinity : MonoBehaviour {
 	}
 
 	List<int> GenerateRandom() {
-		var t = new List<int> ();
+		var t = new List<int>();
 		for (int i = 0; i < 5; i++) {
-			t.Add (UnityEngine.Random.Range (1, 6));
+			t.Add (UnityEngine.Random.Range(1, 6));
 		}
 		return t;
 	}
 
 	void Start () {
 		Module.OnActivate += delegate {
-			BeginForgetting ();
+			BeginForgetting();
 		};
 		Buttons [0].OnInteract += delegate{Handle1();return false;};
 		Buttons [1].OnInteract += delegate{Handle2();return false;};
@@ -64,50 +63,51 @@ public class ForgetInfinity : MonoBehaviour {
 		Buttons [3].OnInteract += delegate{Handle4();return false;};
 		Buttons [4].OnInteract += delegate{Handle5();return false;};
 		SubmitButton.OnInteract += delegate {
-			Submit ();
+			Submit();
 			return false;
 		};
 		ResetButton.OnInteract += delegate {
-			Reset ();
+            ResetButton.AddInteractionPunch();
+			Reset();
 			return false;
 		};
 	}
 
 	void BeginForgetting() {
-		Debug.Log ("[Forget Infinity] Module activated...! Let's forget!");
+		Debug.Log("[Forget Infinity] Module activated...! Let's forget!");
 		canForget = true;
-		updateScreen (new[]{ 0, 0, 0, 0, 0 });
+		updateScreen(new[]{ 0, 0, 0, 0, 0 });
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		CheckForNewSolves ();
+		CheckForNewSolves();
 	}
 
 	string ListString(List<string> a) {
-		var sb = new StringBuilder ();
+		var sb = new StringBuilder();
 		foreach(var j in a) {
-			sb.Append (j + " ");
+			sb.Append(j + " ");
 		}
-		return sb.ToString ();
+		return sb.ToString();
 	}
 
 	string ListString(List<int> a) {
-		var sb = new StringBuilder ();
+		var sb = new StringBuilder();
 		foreach(var j in a) {
-			sb.Append (j.ToString() + " ");
+			sb.Append(j.ToString() + " ");
 		}
-		return sb.ToString ();
+		return sb.ToString();
 	}
 
 	void NextStage() {
-		Debug.Log ("[Forget Infinity] advancing stage!");
-		var rand = GenerateRandom ();
-		stages.Add (rand);
+		Debug.Log("[Forget Infinity] advancing stage!");
+		var rand = GenerateRandom();
+		stages.Add(rand);
 		stagePtr++;
-		updateScreen (rand.ToArray());
-		Debug.Log ("[Forget Infinity] we are now on stage " + stagePtr.ToString());
-		Debug.Log ("[Forget Infinity] next stage is: " + ListString(rand));
+		updateScreen(rand.ToArray());
+		Debug.Log("[Forget Infinity] we are now on stage " + stagePtr.ToString());
+		Debug.Log("[Forget Infinity] next stage is: " + ListString(rand));
 	}
 
 	void CheckForNewSolves() {
@@ -117,50 +117,88 @@ public class ForgetInfinity : MonoBehaviour {
 			return;
 		if (!canForget)
 			return;
-		var solvables = Info.GetSolvableModuleNames ().Where (a => !ignoredModules.Contains (a));
-		var list1 = Info.GetSolvedModuleNames ().Where(a => solvables.Contains(a));
-		if (list1.Count () >= solvables.Count() && !firstSolve) {
-			Debug.Log ("[Forget Infinity] all non-ignored solvables solved. activating boss mode.");
+		var solvables = Info.GetSolvableModuleNames().Where(a => !ignoredModules.Contains (a));
+		var list1 = Info.GetSolvedModuleNames().Where(a => solvables.Contains(a));
+		if (list1.Count() >= solvables.Count() && !firstSolve) {
+			Debug.Log("[Forget Infinity] all non-ignored solvables solved. activating boss mode.");
 			bossMode = true;
-			updateScreen (new[] { 0, 0, 0, 0, 0 });
+			updateScreen(new[] { 0, 0, 0, 0, 0 });
 			return;
 		}
 		if (list1.Count() != lastThing) {
-			NextStage ();
+			NextStage();
 			firstSolve = false;
 		}
-		lastThing = list1.Count ();
+		lastThing = list1.Count();
 	}
 
 	void Submit() {
-		SubmitButton.AddInteractionPunch ();
-		if (!bossMode) {
-			Debug.Log ("[Forget Infinity] boss mode not active. Strike! (submit button)");
-			Module.HandleStrike ();
+		SubmitButton.AddInteractionPunch();
+        if (!bossMode) {
+			Debug.Log("[Forget Infinity] boss mode not active. Strike! (submit button)");
+			Module.HandleStrike();
 			return;
 		}
 		var stg = stages[solveStagePtr];
-		Debug.Log (ListString (stg));
-		Debug.Log ("solve stage ptr = " + solveStagePtr.ToString ());
-		Debug.Log ("stage count = " + stages.Count ());
+        Debug.Log("not calculated: " + ListString(stg));
+        if (KMBombInfoExtensions.KMBI.IsPortPresent(Info, KMBombInfoExtensions.KMBI.KnownPortType.StereoRCA))
+        {
+            Debug.Log("rev");
+            stg.Reverse();
+        }
+        var batteries = KMBombInfoExtensions.KMBI.GetBatteryCount(Info);
+        if (batteries != 0)
+        {
+            Debug.Log("batteries " + batteries);
+            for (int i=0; i<5; i++)
+            {
+                var t = stg[i];
+                t = (t + batteries) % 5;
+                if (t == 0)
+                {
+                    t = 5;
+                }
+                stg[i] = t;
+            }
+        }
+        var serial = KMBombInfoExtensions.KMBI.GetSerialNumber(Info);
+        if (serial.Contains("F") || serial.Contains("I"))
+        {
+            Debug.Log("FI");
+            for (int i=0; i<5; i++)
+            {
+                var t = stg[i];
+                t = t - 1;
+                if (t == 0)
+                {
+                    t = 5;
+                }
+                stg[i] = t;
+            }
+        }
+		Debug.Log("calculated: " + ListString(stg));
+		Debug.Log("solve stage ptr = " + solveStagePtr.ToString());
+		Debug.Log("stage count = " + stages.Count());
 		for (int i = 0; i < 5; i++) {
 			if (code [i] != stg[i]) {
-				Debug.Log ("[Forget Infinity] Code is different from the expected input of " + ListString (stg) + ". Strike!");
-				Module.HandleStrike ();
-				Reset ();
+				Debug.Log("[Forget Infinity] Code is different from the expected input of " + ListString(stg) + ". Strike!");
+				Module.HandleStrike();
+				Reset();
+                solveStagePtr = 0;
 				return;
 			}
 		}
 		if (stages.Count()-1 <= solveStagePtr) {
+            Debug.Log("[Forget Infinity] All codes are correct! Solve!");
 			solved = true;
-			Module.HandlePass ();
+			Module.HandlePass();
 			Screen.text = "XXXXX";
 			return;
 		}
 		solveStagePtr++;
-		for (int i=0; i<5; i++) this.code [i] = 0;
+		for (int i=0; i<5; i++) this.code[i] = 0;
 		this.codeIndex = 0;
-		updateScreen ();
+		updateScreen();
 	}
 
 	void updateScreen(int[] a) {
@@ -172,62 +210,61 @@ public class ForgetInfinity : MonoBehaviour {
 	}
 
 	void updateScreen() {
-		updateScreen (code);
+		updateScreen(code);
 	}
 
 	void Number(int button) {
 		if (solved)
 			return;
 		if (!bossMode) {
-			Debug.Log ("[Forget Infinity] boss mode not active. Strike! (button "+button.ToString()+")");
-			Module.HandleStrike ();
+			Debug.Log("[Forget Infinity] boss mode not active. Strike! (button "+button.ToString()+")");
+			Module.HandleStrike();
 			return;
 		}
-		Debug.Log ("[Forget Infinity] button " + button.ToString () + " pushed");
+		Debug.Log ("[Forget Infinity] button " + button.ToString() + " pushed");
 		if (this.codeIndex == this.code.Length)
 			return;
 		if (this.codeIndex < 5) {
-			this.code [this.codeIndex++] = button;
+			this.code[this.codeIndex++] = button;
 		}
-		updateScreen ();
+		updateScreen();
 	}
 
 	void Handle1() {
-		Buttons[0].AddInteractionPunch ();
-		Number (1);
+		Buttons[0].AddInteractionPunch();
+		Number(1);
 	}
 
 	void Handle2() {
-		Buttons[1].AddInteractionPunch ();
-		Number (2);
+		Buttons[1].AddInteractionPunch();
+		Number(2);
 	}
 
 	void Handle3() {
-		Buttons[2].AddInteractionPunch ();
-		Number (3);
+		Buttons[2].AddInteractionPunch();
+		Number(3);
 	}
 
 	void Handle4() {
-		Buttons[3].AddInteractionPunch ();
-		Number (4);
+		Buttons[3].AddInteractionPunch();
+		Number(4);
 	}
 
 	void Handle5() {
-		Buttons[4].AddInteractionPunch ();
-		Number (5);
+		Buttons[4].AddInteractionPunch();
+		Number(5);
 	}
 
 	void Reset() {
 		if (solved)
 			return;
 		if (!bossMode) {
-			Debug.Log ("[Forget Infinity] boss mode not active. Strike! (reset button)");
-			Module.HandleStrike ();
+			Debug.Log("[Forget Infinity] boss mode not active. Strike! (reset button)");
+			Module.HandleStrike();
 			return;
 		}
-		for (int i=0; i<5; i++) this.code [i] = 0;
+		for (int i=0; i<5; i++) this.code[i] = 0;
 		this.codeIndex = 0;
-		this.solveStagePtr = 0;
-		updateScreen ();
+		updateScreen();
 	}
 }

@@ -14,7 +14,17 @@ MonoBehaviour:
   id: ForgetInfinity
   title: Forget Infinity
   author: ry00001
-  description: Don't forget.
+  description: '== Rules might change in future versions of the module. ==
+
+    Don''t forget.
+
+
+    (This is my first modded module!)
+
+
+    Change log:
+
+    -'
   version: 0.1
   outputFolder: build
-  previewImage: {fileID: 0}
+  previewImage: {fileID: 2800000, guid: 4eed3be22e65f23428526556719bfbdc, type: 3}
