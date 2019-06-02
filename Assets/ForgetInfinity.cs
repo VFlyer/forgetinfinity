@@ -267,4 +267,50 @@ public class ForgetInfinity : MonoBehaviour {
 		this.codeIndex = 0;
 		updateScreen();
 	}
+
+    // Twitch Plays support
+
+    string TwitchHelpMessage = "Enter the sequence with \"!{0} press 12345...\". Submit with \"!{0} submit\". Reset with \"!{0} reset\".";
+
+    public KMSelectable[] ProcessTwitchCommand(string cmd)
+    {
+        if (solved)
+            throw new System.FormatException("DansGame We're done!");
+        /*if (!bossMode)
+            throw new System.FormatException("A bit early, don't you think?");*/
+        cmd = cmd.ToLowerInvariant();
+        List<KMSelectable> l = new List<KMSelectable>();
+        if (cmd.StartsWith("press "))
+        {
+            cmd = cmd.Substring(6);
+            var split = cmd.Split(' ');
+            foreach(var i in split)
+            {
+                int a = 0;
+                var r = Int32.TryParse(i, out a);
+                if (!r)
+                {
+                    throw new System.FormatException("That's not a number.");
+                }
+                if (a > 5 || a < 1)
+                {
+                    throw new System.FormatException("Out of bounds!");
+                }
+                l.Add(Buttons[a-1]);
+            }
+        }
+        else if (cmd.StartsWith("submit"))
+        {
+            return new KMSelectable[] { SubmitButton };
+        }
+        else if (cmd.StartsWith("reset"))
+        {
+            return new KMSelectable[] { ResetButton };
+        }
+        else
+        {
+            throw new System.FormatException("Use 'press' followed by some numbers, 'submit' or 'reset'.");
+        }
+        return l.ToArray();
+    }
 }
