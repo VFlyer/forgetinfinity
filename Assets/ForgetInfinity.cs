@@ -171,27 +171,20 @@ public class ForgetInfinity : MonoBehaviour {
             return;
         }
 		var stg = stages[solveStagePtr];
-        var asenum = stg.AsEnumerable();
         Debug.Log("not calculated: " + ListString(stg));
-        if (KMBombInfoExtensions.KMBI.IsPortPresent(Info, KMBombInfoExtensions.KMBI.KnownPortType.StereoRCA))
-        {
-            Debug.Log("rev");
-            asenum = asenum.Reverse();
-        }
-        var ae2 = asenum.ToList();
         var batteries = KMBombInfoExtensions.KMBI.GetBatteryCount(Info);
         if (batteries != 0)
         {
             Debug.Log("batteries " + batteries);
             for (int i=0; i<5; i++)
             {
-                var t = ae2[i];
+                var t = stg[i];
                 t = (t + batteries) % 5;
                 if (t == 0)
                 {
                     t = 5;
                 }
-                ae2[i] = t;
+                stg[i] = t;
             }
         }
         var serial = KMBombInfoExtensions.KMBI.GetSerialNumber(Info);
@@ -200,7 +193,7 @@ public class ForgetInfinity : MonoBehaviour {
             Debug.Log("FI");
             for (int i=0; i<5; i++)
             {
-                var t = ae2[i];
+                var t = stg[i];
                 t = t - 1;
                 if (t == 0)
                 {
@@ -209,12 +202,12 @@ public class ForgetInfinity : MonoBehaviour {
                 stg[i] = t;
             }
         }
-		Debug.Log("calculated: " + ListString(ae2));
+		Debug.Log("calculated: " + ListString(stg));
 		Debug.Log("solve stage ptr = " + solveStagePtr.ToString());
 		Debug.Log("stage count = " + stages.Count());
 		for (int i = 0; i < 5; i++) {
 			if (code [i] != stg[i]) {
-				Debug.Log("[Forget Infinity] Code is different from the expected input of " + ListString(ae2) + ". Strike!");
+				Debug.Log("[Forget Infinity] Code is different from the expected input of " + ListString(stg) + ". Strike!");
 				Module.HandleStrike();
 				Reset(true);
                 solveStagePtr = 0;

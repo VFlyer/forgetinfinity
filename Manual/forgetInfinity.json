@@ -3,7 +3,7 @@
     "Compatibility": "Compatible",
     "DefuserDifficulty": "Medium",
     "Description": "Keep track of information given by the module which changes after a module is solved, modify it and input it in sequence. Tags: sequence, numbers, staged",
-    "ExpertDifficulty": "Hard",
+    "ExpertDifficulty": "Medium",
     "Ignore": [
       "Forget Everything",
       "Forget Me Not",
