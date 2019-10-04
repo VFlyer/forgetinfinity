@@ -170,7 +170,7 @@ public class ForgetInfinity : MonoBehaviour {
             Screen.color = new UnityEngine.Color(1, 1, 1);
             return;
         }
-		var stg = stages[solveStagePtr];
+        List<int> stg = new List<int>(stages[solveStagePtr]);
         Debug.Log("not calculated: " + ListString(stg));
         var batteries = KMBombInfoExtensions.KMBI.GetBatteryCount(Info);
         if (batteries != 0)
@@ -325,8 +325,8 @@ public class ForgetInfinity : MonoBehaviour {
     }
 
     // Twitch Plays support
-
-    string TwitchHelpMessage = "Enter the sequence with \"!{0} press 1 2 3 4 5...\". Submit with \"!{0} submit\". Reset with \"!{0} reset\".";
+    
+    public readonly string TwitchHelpMessage = "Enter the sequence with \"!{0} press 1 2 3 4 5...\". Submit with \"!{0} submit\". Reset with \"!{0} reset\".";
 
     public KMSelectable[] ProcessTwitchCommand(string cmd)
     {
